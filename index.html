@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* New styling to support a printed-only detailed scorecard */
+        #print-only-card { display: none; margin-top: 20px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem;}
+        .print-table th, .print-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .print-table th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
     <div class="app-container" id="match-report">
@@ -87,6 +94,29 @@
                 <div id="ball-history" class="ball-history"></div>
             </div>
 
+            <!-- New Section: Final Detailed Scorecard (Hidden until PDF generation) -->
+            <section id="print-only-card" class="card">
+                <h2>Final Match Report</h2>
+                <h3 id="print-header">Rouen Cricket Club vs Opponent XI</h3>
+                <div id="print-final-result" class="divider">...</div>
+                
+                <div id="print-card-tables">
+                    <!-- Complete Batting Scorecard Table -->
+                    <h4>Batting</h4>
+                    <table class="print-table" id="print-batting-table">
+                        <thead><tr><th>Batter</th><th>Status</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>
+                        <tbody id="print-batting-body"></tbody>
+                    </table>
+
+                    <!-- Complete Bowling Scorecard Table -->
+                    <h4 style="margin-top: 15px;">Bowling</h4>
+                    <table class="print-table" id="print-bowling-table">
+                        <thead><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr></thead>
+                        <tbody id="print-bowling-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Scoring Controls -->
             <div class="controls-grid">
                 <button class="btn run-btn" onclick="addRuns(0)">0</button>
@@ -104,8 +134,8 @@
 
             <div class="action-footer">
                 <button class="btn btn-secondary" onclick="undoLastAction()">Undo</button>
-                <button class="btn btn-export" onclick="exportPDF()">Export PDF</button>
-                <button class="btn btn-danger" onclick="resetMatch()">Reset</button>
+                <button class="btn btn-export" id="export-btn" onclick="exportPDF()">Export Final PDF</button>
+                <button class="btn btn-danger" id="reset-btn" onclick="resetMatch()">Reset</button>
             </div>
         </section>
     </div>
