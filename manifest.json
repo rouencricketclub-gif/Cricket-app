@@ -1,0 +1,8 @@
+{
+  "short_name": "CricketScorer",
+  "name": "Cricket Live Scorer App",
+  "start_url": "./index.html",
+  "background_color": "#1b4332",
+  "theme_color": "#1b4332",
+  "display": "standalone"
+}

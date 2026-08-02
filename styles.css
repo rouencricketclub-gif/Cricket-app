@@ -1,0 +1,152 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+header h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    color: #1b4332;
+}
+
+.card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.hidden { display: none !important; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9rem; }
+.form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+
+.divider { margin: 15px 0; border: 0; border-top: 1px solid #eee; }
+
+.score-display {
+    text-align: center;
+    background: #1b4332;
+    color: white;
+    padding: 18px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.innings-tag {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: #2d6a4f;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.main-score { font-size: 2.8rem; font-weight: bold; margin: 5px 0; }
+.overs-display { font-size: 0.95rem; opacity: 0.9; }
+
+.target-box {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255,255,255,0.3);
+    font-size: 0.88rem;
+    color: #ffb703;
+    font-weight: bold;
+}
+
+.stats-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.95rem;
+}
+
+.active-batter { font-weight: bold; color: #2d6a4f; }
+
+.recent-balls-container { margin-bottom: 15px; }
+.recent-balls-container h3 { font-size: 0.85rem; color: #666; margin-bottom: 6px; }
+
+.ball-history { display: flex; gap: 6px; min-height: 32px; align-items: center; }
+.ball-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.ball-badge.four { background: #4ea8de; color: white; }
+.ball-badge.six { background: #52b788; color: white; }
+.ball-badge.wicket { background: #e63946; color: white; }
+.ball-badge.extra { background: #ffb703; color: black; }
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primary { background: #2d6a4f; color: white; width: 100%; }
+.run-btn { background: #e9ecef; color: #212529; }
+.run-btn.boundary { background: #d8f3dc; color: #1b4332; }
+.extra-btn { background: #fff3bf; color: #5c940d; font-size: 0.9rem; }
+.wicket-btn { background: #ffe3e3; color: #c92a2a; }
+
+.action-footer { display: flex; gap: 6px; }
+.btn-secondary { background: #ced4da; color: #495057; flex: 1; font-size: 0.85rem; }
+.btn-export { background: #023e8a; color: white; flex: 1; font-size: 0.85rem; }
+.btn-danger { background: #f8d7da; color: #842029; flex: 1; font-size: 0.85rem; }
+
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 20px; border-radius: 8px; width: 85%; max-width: 350px;
+}
+.modal-content input { width: 100%; padding: 8px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 4px; }

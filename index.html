@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Pro Scorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="app-container" id="match-report">
+        <header>
+            <h1>Cricket Live Scorer</h1>
+        </header>
+
+        <!-- Setup Screen -->
+        <section id="setup-screen" class="card">
+            <h2>Match Setup</h2>
+            <div class="form-group">
+                <label for="batting-team">1st Innings Batting Team</label>
+                <input type="text" id="batting-team" value="Rouen Cricket Club">
+            </div>
+            <div class="form-group">
+                <label for="bowling-team">1st Innings Bowling Team</label>
+                <input type="text" id="bowling-team" value="Opponent XI">
+            </div>
+            <div class="form-group">
+                <label for="total-overs">Total Overs Per Innings</label>
+                <input type="number" id="total-overs" value="20" min="1" max="50">
+            </div>
+            <hr class="divider">
+            <h3>Opening Players</h3>
+            <div class="form-group">
+                <label for="striker-name">Striker Name</label>
+                <input type="text" id="striker-name" placeholder="Batter 1">
+            </div>
+            <div class="form-group">
+                <label for="non-striker-name">Non-Striker Name</label>
+                <input type="text" id="non-striker-name" placeholder="Batter 2">
+            </div>
+            <div class="form-group">
+                <label for="bowler-name">Bowler Name</label>
+                <input type="text" id="bowler-name" placeholder="Bowler 1">
+            </div>
+            <button class="btn btn-primary" onclick="startMatch()">Start Match</button>
+        </section>
+
+        <!-- Main Scoreboard Screen -->
+        <section id="scoreboard-screen" class="card hidden">
+            <div class="score-display">
+                <div class="innings-tag" id="innings-tag">1st Innings</div>
+                <h2 id="teams-header">Team A vs Team B</h2>
+                <div class="main-score">
+                    <span id="score-runs">0</span> / <span id="score-wickets">0</span>
+                </div>
+                <div class="overs-display">
+                    Overs: <span id="completed-overs">0.0</span> / <span id="max-overs">20</span> | CRR: <span id="run-rate">0.00</span>
+                </div>
+                
+                <!-- Target Box for 2nd Innings -->
+                <div id="target-container" class="target-box hidden">
+                    Target: <span id="target-runs">0</span> | Need <span id="runs-needed">0</span> from <span id="balls-remaining">0</span> balls (RRR: <span id="req-run-rate">0.00</span>)
+                </div>
+            </div>
+
+            <!-- Player Stats Section -->
+            <div class="stats-card">
+                <div class="stat-row active-batter" id="striker-row">
+                    <span class="player-name"><strong id="striker-disp">*Batter 1</strong></span>
+                    <span class="player-stat" id="striker-stat">0 (0) [4s:0 6s:0]</span>
+                </div>
+                <div class="stat-row" id="non-striker-row">
+                    <span class="player-name" id="non-striker-disp">Batter 2</span>
+                    <span class="player-stat" id="non-striker-stat">0 (0) [4s:0 6s:0]</span>
+                </div>
+                <hr>
+                <div class="stat-row">
+                    <span class="player-name" id="bowler-disp">Bowler 1</span>
+                    <span class="player-stat" id="bowler-stat">0.0 - 0 - 0w</span>
+                </div>
+            </div>
+
+            <!-- Recent Balls -->
+            <div class="recent-balls-container">
+                <h3>This Over:</h3>
+                <div id="ball-history" class="ball-history"></div>
+            </div>
+
+            <!-- Scoring Controls -->
+            <div class="controls-grid">
+                <button class="btn run-btn" onclick="addRuns(0)">0</button>
+                <button class="btn run-btn" onclick="addRuns(1)">1</button>
+                <button class="btn run-btn" onclick="addRuns(2)">2</button>
+                <button class="btn run-btn" onclick="addRuns(3)">3</button>
+                <button class="btn run-btn boundary" onclick="addRuns(4)">4</button>
+                <button class="btn run-btn boundary" onclick="addRuns(6)">6</button>
+                
+                <button class="btn extra-btn" onclick="addExtra('wide')">WD</button>
+                <button class="btn extra-btn" onclick="addExtra('noball')">NB</button>
+                <button class="btn extra-btn" onclick="swapStrike()">Swap Strike</button>
+                <button class="btn wicket-btn" onclick="addWicket()">WICKET</button>
+            </div>
+
+            <div class="action-footer">
+                <button class="btn btn-secondary" onclick="undoLastAction()">Undo</button>
+                <button class="btn btn-export" onclick="exportPDF()">Export PDF</button>
+                <button class="btn btn-danger" onclick="resetMatch()">Reset</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal for New Player Entry / Innings Switch -->
+    <div id="player-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-title">Enter Next Player</h3>
+            <div id="modal-inputs">
+                <input type="text" id="modal-player-input" placeholder="Player Name">
+            </div>
+            <button class="btn btn-primary" onclick="confirmModal()">Submit</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
