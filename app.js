@@ -78,7 +78,7 @@ function saveHistory() {
 }
 
 function addRuns(r) {
-    if (isMatchOver()) return;
+    if (isMatchCompleted()) return;
     saveHistory();
 
     state.runs += r;
@@ -106,7 +106,7 @@ function addRuns(r) {
 }
 
 function addExtra(type) {
-    if (isMatchOver()) return;
+    if (isMatchCompleted()) return;
     saveHistory();
 
     state.runs += 1;
@@ -125,7 +125,7 @@ function addExtra(type) {
 }
 
 function addWicket() {
-    if (isMatchOver()) return;
+    if (isMatchCompleted()) return;
     saveHistory();
 
     state.wickets++;
@@ -183,7 +183,7 @@ function swapStrike() {
 }
 
 function checkMatchStatus() {
-    if (isMatchOver()) {
+    if (isMatchCompleted()) {
         state.inningsCompleted[state.currentInnings] = true;
         setMatchOverUI();
         return;
@@ -225,14 +225,14 @@ function checkMatchStatus() {
     if (state.currentInnings === 2) {
         if (state.runs >= state.target) {
             state.inningsCompleted[state.currentInnings] = true;
-            state.finalResultText = `Match Over! ${state.team2} won by${10 - state.wickets} wickets!`;
+            state.finalResultText = `Match Over! ${state.team2} won by ${10 - state.wickets} wickets!`;
             alert(state.finalResultText);
             setMatchOverUI();
             return;
         }
         if (inningsOver && state.runs < state.target - 1) {
             state.inningsCompleted[state.currentInnings] = true;
-            state.finalResultText = `Match Over! ${state.team1} won by${state.target - 1 - state.runs} runs!`;
+            state.finalResultText = `Match Over! ${state.team1} won by ${state.target - 1 - state.runs} runs!`;
             alert(state.finalResultText);
             setMatchOverUI();
             return;
@@ -255,7 +255,7 @@ function checkOverCompletion() {
         state.currentOverHistory = [];
         syncActivePlayersToHistory(); // Sync bowler maidens etc.
         
-        if (!isMatchOver()) {
+        if (!isMatchCompleted()) {
             promptModal('Enter Next Bowler', [
                 { id: 'm-p1', placeholder: 'Bowler Name' }
             ], (vals) => {
@@ -275,8 +275,11 @@ function checkOverCompletion() {
     }
 }
 
-function isMatchOver() {
-    return state.inningsCompleted[1] && state.inningsCompleted[2];
+function isMatchCompleted() {
+    if (state.currentInnings === 2) {
+        return state.runs >= state.target || state.wickets >= 10 || state.totalLegalBalls >= state.maxOvers * 6;
+    }
+    return false;
 }
 
 function setMatchOverUI() {
@@ -343,8 +346,9 @@ function updateUI() {
     const bowling = state.currentInnings === 1 ? state.team2 : state.team1;
     
     document.getElementById('innings-tag').innerText = `${state.currentInnings === 1 ? '1st' : '2nd'} Innings`;
-    document.getElementById('teams-header').innerText = `${batting} vs${bowling}`;
+    document.getElementById('teams-header').innerText = `${batting} vs ${bowling}`;
     document.getElementById('max-overs').innerText = state.maxOvers;
+
     document.getElementById('score-runs').innerText = state.runs;
     document.getElementById('score-wickets').innerText = state.wickets;
 
@@ -374,7 +378,7 @@ function updateUI() {
     document.getElementById('non-striker-stat').innerText = `${state.nonStriker.runs} (${state.nonStriker.balls}) [4s:${state.nonStriker.fours} 6s:${state.nonStriker.sixes}]`;
     const bowlerOvers = `${Math.floor(state.bowler.balls / 6)}.${state.bowler.balls % 6}`;
     document.getElementById('bowler-disp').innerText = state.bowler.name;
-    document.getElementById('bowler-stat').innerText = `${bowlerOvers} ov - ${state.bowler.runs}r -${state.bowler.wickets}w`;
+    document.getElementById('bowler-stat').innerText = `${bowlerOvers} ov - ${state.bowler.runs}r - ${state.bowler.wickets}w`;
 
     const historyContainer = document.getElementById('ball-history');
     historyContainer.innerHTML = '';
@@ -391,7 +395,7 @@ function buildPrintTables() {
     syncActivePlayersToHistory(); // Last sync before printing
 
     const header = document.getElementById('print-header');
-    header.innerText = `${state.team1} vs${state.team2}`;
+    header.innerText = `${state.team1} vs ${state.team2}`;
     
     document.getElementById('print-final-result').innerHTML = `<strong>Result:</strong> ${state.finalResultText || 'Match incomplete'}`;
 
@@ -427,179 +431,41 @@ function buildPrintTables() {
             <td><strong>${bowler.name}</strong></td>
             <td>${overs}</td>
             <td>0</td> <!-- Maiden calc is complex without over logs -->
-            <td>${bowler.runs}This is a very important and powerful upgrade. The app we built is **designed to be very lightweight** and keeps **zero historical data** in memory. When a match is reset or reloaded, all detailed over-by-over and player statistics are erased. This is what makes it work so well on a mobile phone without needing a database.
+            <td>${bowler.runs}</td>
+            <td><strong>${bowler.wickets}</strong></td>
+            <td>${econ}</td>
+        `;
+        bowlBody.appendChild(row);
+    });
+}
 
-While we cannot generate a **retroactive** PDF of a complete past match, we **can** modify the app to include a detailed **Final Match Summary (A Match Report)** that can be printed as a PDF *before* you press reset.
+function exportPDF() {
+    // 1. Build the scorecard tables from history data
+    buildPrintTables();
+    
+    // 2. Temporarily show the print section and hide controls
+    const controls = document.querySelectorAll('.controls-grid, .score-display, .stats-card, .recent-balls-container, .innings-tag');
+    controls.forEach(c => c.style.display = 'none');
+    document.getElementById('print-only-card').style.display = 'block';
 
-Here is the exact code to upgrade your files to support detailed player scorecard reporting for the **whole squad** that batted or bowled.
+    // 3. Generate PDF
+    const element = document.getElementById('match-report');
+    const filename = `${state.team1}_vs_${state.team2}_Complete_Match_Report.pdf`;
+    
+    html2pdf()
+        .set({ margin: 10, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } })
+        .from(element)
+        .save()
+        .then(() => {
+            // 4. Restore UI after generation
+            controls.forEach(c => c.style.display = '');
+            document.getElementById('print-only-card').style.display = 'none';
+        });
+}
 
----
-
-### Step-by-step: Updating your files for a better PDF Report
-
-#### 1. Update `index.html` (Replace the whole file)
-
-This change is crucial: we are adding a special section that is **hidden on the screen** but becomes visible when you create a PDF. This section contains the tables for the full scorecard.
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Pro Scorer</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js)"></script>
-    <style>
-        /* New styling to support a printed-only detailed scorecard */
-        #print-only-card { display: none; margin-top: 20px; }
-        .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem;}
-        .print-table th, .print-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        .print-table th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-    <div class="app-container" id="match-report">
-        <header>
-            <h1>Cricket Live Scorer</h1>
-        </header>
-
-        <!-- Setup Screen -->
-        <section id="setup-screen" class="card">
-            <h2>Match Setup</h2>
-            <div class="form-group">
-                <label for="batting-team">1st Innings Batting Team</label>
-                <input type="text" id="batting-team" value="Rouen Cricket Club">
-            </div>
-            <div class="form-group">
-                <label for="bowling-team">1st Innings Bowling Team</label>
-                <input type="text" id="bowling-team" value="Opponent XI">
-            </div>
-            <div class="form-group">
-                <label for="total-overs">Total Overs Per Innings</label>
-                <input type="number" id="total-overs" value="20" min="1" max="50">
-            </div>
-            <hr class="divider">
-            <h3>Opening Players</h3>
-            <div class="form-group">
-                <label for="striker-name">Striker Name</label>
-                <input type="text" id="striker-name" placeholder="Batter 1">
-            </div>
-            <div class="form-group">
-                <label for="non-striker-name">Non-Striker Name</label>
-                <input type="text" id="non-striker-name" placeholder="Batter 2">
-            </div>
-            <div class="form-group">
-                <label for="bowler-name">Bowler Name</label>
-                <input type="text" id="bowler-name" placeholder="Bowler 1">
-            </div>
-            <button class="btn btn-primary" onclick="startMatch()">Start Match</button>
-        </section>
-
-        <!-- Main Scoreboard Screen -->
-        <section id="scoreboard-screen" class="card hidden">
-            <div class="score-display">
-                <div class="innings-tag" id="innings-tag">1st Innings</div>
-                <h2 id="teams-header">Team A vs Team B</h2>
-                <div class="main-score">
-                    <span id="score-runs">0</span> / <span id="score-wickets">0</span>
-                </div>
-                <div class="overs-display">
-                    Overs: <span id="completed-overs">0.0</span> / <span id="max-overs">20</span> | CRR: <span id="run-rate">0.00</span>
-                </div>
-                
-                <!-- Target Box for 2nd Innings -->
-                <div id="target-container" class="target-box hidden">
-                    Target: <span id="target-runs">0</span> | Need <span id="runs-needed">0</span> from <span id="balls-remaining">0</span> balls (RRR: <span id="req-run-rate">0.00</span>)
-                </div>
-            </div>
-
-            <!-- Player Stats Section -->
-            <div class="stats-card">
-                <div class="stat-row active-batter" id="striker-row">
-                    <span class="player-name"><strong id="striker-disp">*Batter 1</strong></span>
-                    <span class="player-stat" id="striker-stat">0 (0) [4s:0 6s:0]</span>
-                </div>
-                <div class="stat-row" id="non-striker-row">
-                    <span class="player-name" id="non-striker-disp">Batter 2</span>
-                    <span class="player-stat" id="non-striker-stat">0 (0) [4s:0 6s:0]</span>
-                </div>
-                <hr>
-                <div class="stat-row">
-                    <span class="player-name" id="bowler-disp">Bowler 1</span>
-                    <span class="player-stat" id="bowler-stat">0.0 - 0 - 0w</span>
-                </div>
-            </div>
-
-            <!-- Recent Balls -->
-            <div class="recent-balls-container">
-                <h3>This Over:</h3>
-                <div id="ball-history" class="ball-history"></div>
-            </div>
-
-            <!-- New Section: Final Detailed Scorecard (Hidden until PDF generation) -->
-            <section id="print-only-card" class="card">
-                <h2>Final Match Report</h2>
-                <h3 id="print-header">Rouen Cricket Club vs Opponent XI</h3>
-                <div id="print-final-result" class="divider">...</div>
-                
-                <div id="print-card-tables">
-                    <!-- Complete Batting Scorecard Table -->
-                    <h4>Batting</h4>
-                    <table class="print-table" id="print-batting-table">
-                        <thead><tr><th>Batter</th><th>Status</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>
-                        <tbody id="print-batting-body"></tbody>
-                    </table>
-
-                    <!-- Complete Bowling Scorecard Table -->
-                    <h4 style="margin-top: 15px;">Bowling</h4>
-                    <table class="print-table" id="print-bowling-table">
-                        <thead><tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr></thead>
-                        <tbody id="print-bowling-body"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Scoring Controls -->
-            <div class="controls-grid">
-                <button class="btn run-btn" onclick="addRuns(0)">0</button>
-                <button class="btn run-btn" onclick="addRuns(1)">1</button>
-                <button class="btn run-btn" onclick="addRuns(2)">2</button>
-                <button class="btn run-btn" onclick="addRuns(3)">3</button>
-                <button class="btn run-btn boundary" onclick="addRuns(4)">4</button>
-                <button class="btn run-btn boundary" onclick="addRuns(6)">6</button>
-                
-                <button class="btn extra-btn" onclick="addExtra('wide')">WD</button>
-                <button class="btn extra-btn" onclick="addExtra('noball')">NB</button>
-                <button class="btn extra-btn" onclick="swapStrike()">Swap Strike</button>
-                <button class="btn wicket-btn" onclick="addWicket()">WICKET</button>
-            </div>
-
-            <div class="action-footer">
-                <button class="btn btn-secondary" onclick="undoLastAction()">Undo</button>
-                <button class="btn btn-export" id="export-btn" onclick="exportPDF()">Export Final PDF</button>
-                <button class="btn btn-danger" id="reset-btn" onclick="resetMatch()">Reset</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- Modal for New Player Entry / Innings Switch -->
-    <div id="player-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 id="modal-title">Enter Next Player</h3>
-            <div id="modal-inputs">
-                <input type="text" id="modal-player-input" placeholder="Player Name">
-            </div>
-            <button class="btn btn-primary" onclick="confirmModal()">Submit</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
-</body>
-</html>
+function resetMatch() {
+    if (confirm('Reset all match data? This cannot be undone.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+    }
+}
